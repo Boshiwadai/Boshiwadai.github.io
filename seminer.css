@@ -30,6 +30,9 @@ p{
 	margin-bottom: 50px
 }
 
+.caution {
+	font-size: 50%
+}
 
 #startButton{
 	margin:0.5ex auto;
