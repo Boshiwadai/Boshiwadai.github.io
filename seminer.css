@@ -30,8 +30,8 @@ p{
 	margin-bottom: 50px
 }
 
-p .caution {
-	font-size: 50%
+.caution {
+	font-size: 20%
 }
 
 #startButton{
