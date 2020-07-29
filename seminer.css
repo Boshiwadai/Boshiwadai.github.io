@@ -1,0 +1,80 @@
+@import url('https://fonts.googleapis.com/css?family=Noto+Serif+JP');
+@import url('https://fonts.googleapis.com/css?family=Noto+Sans+JP');
+@import url('https://fonts.googleapis.com/css?family=Bangers');
+@import url('https://fonts.googleapis.com/css?family=Roboto+Condensed:700');
+body{
+	text-align: center;
+	
+	
+}
+
+h1 {
+  font-size: 400%;
+  font-family: 'Bangers', cursive;
+  color: #000033	 
+}
+
+h2 {
+	font-size: 180%;
+	font-family: 'Roboto Condensed', sans-serif;
+	margin-top: -30px;
+	margin-bottom: 10px;
+}
+
+hr {
+	margin-bottom: 80px
+}
+
+p{
+	font-family: 'Noto Sans JP', sans-serif;
+	margin-bottom: 50px
+}
+
+
+#startButton{
+	margin:0.5ex auto;
+	padding: 0.5em 0.8em;
+	border: none;
+	display: inline-block;
+	background-color: white;
+	box-shadow: 0 6px #4063A4;
+	font-size: 114%;
+	line-height: 1;
+	color: #000033;
+	position: relative;
+	cursor: pointer;
+	font-family:'Noto Sans JP', sans-serif;
+	border: 1px solid #000033;
+	box-shadow: 0 1px 1px rgba(0,0,0,.5);
+	top: 0;
+	transition: .2s all;
+}
+
+#stopButton{
+	margin:0.5ex auto;
+	padding: 0.5em 0.8em;
+	border: none;
+	display: inline-block;
+	background-color: #000033;
+	box-shadow: 0 6px #4063A4;
+	font-size: 114%;
+	line-height: 1;
+	color: white;
+	position: relative;
+	cursor: pointer;
+	font-family:'Noto Sans JP', sans-serif;
+	border: 1px solid #000033;
+	box-shadow: 0 1px 1px rgba(0,0,0,.5);
+	top: 0;
+	transition: .2s all;
+}
+
+.API img{
+	
+	float: left;
+	margin:15px 15px 15px 15px;
+}
+
+img {
+	margin-top: 100px;
+}
