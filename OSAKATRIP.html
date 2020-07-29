@@ -21,7 +21,10 @@
 <p>スポットをエリアで絞り込んで探したい場合は、「エリア絞り込み」と話しかけてください。</p>
 <p>経路が知りたい場合は、「目的地への行き方」と話しかけてください。</p>
 
-
+<p>
+<button id="startButton">START</button>
+<button id="stopButton">STOP</button>
+</p>
 
 <p>
 <div id="resultOutput"></div>
@@ -306,7 +309,7 @@ asr.onresult = function(event){
             if(typeof webpage != 'undefined'){
                 window.open().location.href = webpage; // ページを移動
             }   
-            //asr.start(); // 音声認識を再開 
+            asr.start(); // 音声認識を再開 
 	    }
 
 	    speechSynthesis.speak(tts); // 再生
@@ -329,10 +332,7 @@ stopButton.addEventListener('click', function() {
 </script>
 </div>
 
-<p>
-<button id="startButton">START</button>
-<button id="stopButton">STOP</button>
-</p>
+
 
 <!-- Begin Yahoo! JAPAN Web Services Attribution Snippet -->
 <div class="API">
