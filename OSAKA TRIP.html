@@ -1,0 +1,348 @@
+<html lang="ja">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<meta http-equiv="Content-Script-Type" content="text/javascript">
+<link rel="stylesheet" type="text/css" href="seminer.css"/>
+<link href="https://fonts.googleapis.com/css?family=Bangers rel="stylesheet">
+<title>OSAKATRIP</title>
+</head>
+<body>
+
+<h1>OSAKA TRIP</h1>
+<h2>VOICE SEARCH</h2>
+
+<hr width="90%">
+
+
+<p>「START」を押して質問してください。<br>大阪の観光スポット・天気・宿泊施設・移動経路について情報をお返しします。</p>
+<p>よくある質問<br>「大阪、イベント情報」「大阪の天気」「ホテル予約したい」「難波から梅田の行き方教えて」</p>
+<p>スポットをエリアで絞り込んで探したい場合は、「エリア絞り込み」と話しかけてください。</p>
+<p>経路が知りたい場合は、「目的地への行き方」と話しかけてください。</p>
+
+<p>
+<button id="startButton">START</button>
+<button id="stopButton">STOP</button>
+</p>
+
+<p>
+<div id="resultOutput"></div>
+</p>
+<div>
+<script>
+// 応答の定義（ハッシュ）    
+var response = {
+	"観光": ["人気観光スポットを表示します", "https://osaka-info.jp/page/popular-spot-top"],
+	"スポット": ["人気観光スポットを表示します", "https://osaka-info.jp/page/popular-spot-top"],
+	"人気": ["人気観光スポットを表示します", "https://osaka-info.jp/page/popular-spot-top"],
+	"おすすめ": ["人気観光スポットを表示します", "https://osaka-info.jp/page/popular-spot-top"],
+
+	"イベント": ["イベント情報を表示します","https://osaka-info.jp/page/event-top"],
+	"フェス": ["イベント情報を表示します","https://osaka-info.jp/page/event-top"],
+	"祭": ["イベント情報を表示します","https://osaka-info.jp/page/event-top"],
+
+    "ホテル,予約": ["大阪府のホテル予約ページを表示します", "https://www.tour.ne.jp/ext/deep-exp/j_hotel/list/?coty1=5&dist1=6&utm_campaign=jp_daily_201906&utm_content=side&utm_medium=referral&utm_source=osakainfo"],
+	"宿泊,予約": ["大阪府のホテル予約ページを表示します", "https://www.tour.ne.jp/ext/deep-exp/j_hotel/list/?coty1=5&dist1=6&utm_campaign=jp_daily_201906&utm_content=side&utm_medium=referral&utm_source=osakainfo"],
+	
+	"天気": ["大阪府の天気予報を表示します", "https://weather.yahoo.co.jp/weather/jp/27/"],
+	"雨": ["大阪府の天気予報を表示します", "https://weather.yahoo.co.jp/weather/jp/27/"],
+	"晴れ": ["大阪府の天気予報を表示します", "https://weather.yahoo.co.jp/weather/jp/27/"],
+
+	"自動車": ["ルート検索を表示します", "https://map.yahoo.co.jp/maps?lat=34.68107500&lon=135.50978710&ac=27128&az=&z=13&id=&fa=pa&ei=utf8&p=%E5%A4%A7%E9%98%AA%E5%BA%9C%E5%A4%A7%E9%98%AA%E5%B8%82%E4%B8%AD%E5%A4%AE%E5%8C%BA"],
+	"車": ["ルート検索を表示します", "https://map.yahoo.co.jp/maps?lat=34.68107500&lon=135.50978710&ac=27128&az=&z=13&id=&fa=pa&ei=utf8&p=%E5%A4%A7%E9%98%AA%E5%BA%9C%E5%A4%A7%E9%98%AA%E5%B8%82%E4%B8%AD%E5%A4%AE%E5%8C%BA"],
+	//"徒歩": ["ルート検索を表示します", "https://map.yahoo.co.jp/maps?lat=34.68107500&lon=135.50978710&ac=27128&az=&z=13&id=&fa=pa&ei=utf8&p=%E5%A4%A7%E9%98%AA%E5%BA%9C%E5%A4%A7%E9%98%AA%E5%B8%82%E4%B8%AD%E5%A4%AE%E5%8C%BA"],
+	"歩": ["ルート検索を表示します", "https://map.yahoo.co.jp/maps?lat=34.68107500&lon=135.50978710&ac=27128&az=&z=13&id=&fa=pa&ei=utf8&p=%E5%A4%A7%E9%98%AA%E5%BA%9C%E5%A4%A7%E9%98%AA%E5%B8%82%E4%B8%AD%E5%A4%AE%E5%8C%BA"],
+	"電車": ["電車の乗り換え案内サイトを表示します", "https://transit.yahoo.co.jp/"],
+
+	"北": ["梅田・福島・天満エリアのスポットを表示します", "https://osaka-info.jp/search?filter%5Btop_search%5D=&filter%5Barea%5D%5B%5D=42&filter%5Bsort%5D=sortDateTimeDesc"],
+	"梅田": ["梅田・福島・天満エリアのスポットを表示します", "https://osaka-info.jp/search?filter%5Btop_search%5D=&filter%5Barea%5D%5B%5D=42&filter%5Bsort%5D=sortDateTimeDesc"],
+	"福島": ["梅田・福島・天満エリアのスポットを表示します", "https://osaka-info.jp/search?filter%5Btop_search%5D=&filter%5Barea%5D%5B%5D=42&filter%5Bsort%5D=sortDateTimeDesc"],
+	"天満": ["梅田・福島・天満エリアのスポットを表示します", "https://osaka-info.jp/search?filter%5Btop_search%5D=&filter%5Barea%5D%5B%5D=42&filter%5Bsort%5D=sortDateTimeDesc"],
+
+	"南": ["心斎橋・難波エリアのスポットを表示します", "https://osaka-info.jp/search?filter%5Btop_search%5D=&filter%5Barea%5D%5B%5D=43&filter%5Bsort%5D=sortDateTimeDesc"],
+	"心斎橋": ["心斎橋・難波エリアのスポットを表示します", "https://osaka-info.jp/search?filter%5Btop_search%5D=&filter%5Barea%5D%5B%5D=43&filter%5Bsort%5D=sortDateTimeDesc"],
+	"難波": ["心斎橋・難波エリアのスポットを表示します", "https://osaka-info.jp/search?filter%5Btop_search%5D=&filter%5Barea%5D%5B%5D=43&filter%5Bsort%5D=sortDateTimeDesc"],
+	
+	"北部": ["大阪北部エリアのスポットを表示します", "https://osaka-info.jp/search?filter%5Btop_search%5D=&filter%5Barea%5D%5B%5D=36&filter%5Bsort%5D=sortDateTimeDesc"],
+	"北摂": ["大阪北部エリアのスポットを表示します", "https://osaka-info.jp/search?filter%5Btop_search%5D=&filter%5Barea%5D%5B%5D=36&filter%5Bsort%5D=sortDateTimeDesc"],
+	
+	"東部": ["東部大阪エリアのスポットを表示します", "https://osaka-info.jp/search?filter%5Btop_search%5D=&filter%5Barea%5D%5B%5D=37"],
+	"北河内": ["東部大阪エリアのスポットを表示します", "https://osaka-info.jp/search?filter%5Btop_search%5D=&filter%5Barea%5D%5B%5D=37"],
+	"中河内": ["東部大阪エリアのスポットを表示します", "https://osaka-info.jp/search?filter%5Btop_search%5D=&filter%5Barea%5D%5B%5D=37"],
+	
+	"堺": ["堺・泉北エリアのスポットを表示します", "https://osaka-info.jp/search?filter%5Btop_search%5D=&filter%5Barea%5D%5B%5D=38"],
+	"泉北": ["堺・泉北エリアのスポットを表示します", "https://osaka-info.jp/search?filter%5Btop_search%5D=&filter%5Barea%5D%5B%5D=38"],
+
+	"南東部": ["大阪南東部エリアのスポットを表示します", "https://osaka-info.jp/search?filter%5Btop_search%5D=&filter%5Barea%5D%5B%5D=39&filter%5Bsort%5D=sortDateTimeDesc"],
+	"南河内": ["大阪南東部エリアのスポットを表示します", "https://osaka-info.jp/search?filter%5Btop_search%5D=&filter%5Barea%5D%5B%5D=39&filter%5Bsort%5D=sortDateTimeDesc"],
+
+	"南西部": ["大阪南西部エリアのスポットを表示します", "https://osaka-info.jp/search?filter%5Btop_search%5D=&filter%5Barea%5D%5B%5D=40&filter%5Bsort%5D=sortDateTimeDesc"],
+	"泉州": ["大阪南西部エリアのスポットを表示します", "https://osaka-info.jp/search?filter%5Btop_search%5D=&filter%5Barea%5D%5B%5D=40&filter%5Bsort%5D=sortDateTimeDesc"],
+
+	"新大阪": ["新大阪・淀川区・十三エリアのスポットを表示します", "https://osaka-info.jp/search?filter%5Btop_search%5D=&filter%5Barea%5D%5B%5D=41&filter%5Bsort%5D=sortDateTimeDesc"],
+	"淀川": ["新大阪・淀川区・十三エリアのスポットを表示します", "https://osaka-info.jp/search?filter%5Btop_search%5D=&filter%5Barea%5D%5B%5D=41&filter%5Bsort%5D=sortDateTimeDesc"],
+	"十三": ["新大阪・淀川区・十三エリアのスポットを表示します", "https://osaka-info.jp/search?filter%5Btop_search%5D=&filter%5Barea%5D%5B%5D=41&filter%5Bsort%5D=sortDateTimeDesc"],
+
+	"中之島": ["中之島・淀屋橋・本町エリアのスポットを表示します", "https://osaka-info.jp/search?filter%5Btop_search%5D=&filter%5Barea%5D%5B%5D=44&filter%5Bsort%5D=sortDateTimeDesc"],
+	"淀屋橋": ["中之島・淀屋橋・本町エリアのスポットを表示します", "https://osaka-info.jp/search?filter%5Btop_search%5D=&filter%5Barea%5D%5B%5D=44&filter%5Bsort%5D=sortDateTimeDesc"],
+	"本町": ["中之島・淀屋橋・本町エリアのスポットを表示します", "https://osaka-info.jp/search?filter%5Btop_search%5D=&filter%5Barea%5D%5B%5D=44&filter%5Bsort%5D=sortDateTimeDesc"],
+
+	"天王寺": ["天王寺・阿倍野・新世界エリアのスポットを表示します", "https://osaka-info.jp/search?filter%5Btop_search%5D=&filter%5Barea%5D%5B%5D=45&filter%5Bsort%5D=sortDateTimeDesc"],
+	"阿倍野": ["天王寺・阿倍野・新世界エリアのスポットを表示します", "https://osaka-info.jp/search?filter%5Btop_search%5D=&filter%5Barea%5D%5B%5D=45&filter%5Bsort%5D=sortDateTimeDesc"],
+	"新世界": ["天王寺・阿倍野・新世界エリアのスポットを表示します", "https://osaka-info.jp/search?filter%5Btop_search%5D=&filter%5Barea%5D%5B%5D=45&filter%5Bsort%5D=sortDateTimeDesc"],
+
+	"ベイ": ["ベイエリアのスポットを表示します", "https://osaka-info.jp/search?filter%5Btop_search%5D=&filter%5Barea%5D%5B%5D=46&filter%5Bsort%5D=sortDateTimeDesc"],
+	
+	"上本町": ["上本町・鶴橋エリアのスポットを表示します", "https://osaka-info.jp/search?filter%5Btop_search%5D=&filter%5Barea%5D%5B%5D=47&filter%5Bsort%5D=sortDateTimeDesc"],
+	"鶴橋": ["上本町・鶴橋エリアのスポットを表示します", "https://osaka-info.jp/search?filter%5Btop_search%5D=&filter%5Barea%5D%5B%5D=47&filter%5Bsort%5D=sortDateTimeDesc"],
+
+	"大阪城": ["大阪城・鶴見緑地エリアのスポットを表示します", "https://osaka-info.jp/search?filter%5Btop_search%5D=&filter%5Barea%5D%5B%5D=48&filter%5Bsort%5D=sortDateTimeDesc"],
+	"鶴見緑地": ["大阪城・鶴見緑地エリアのスポットを表示します", "https://osaka-info.jp/search?filter%5Btop_search%5D=&filter%5Barea%5D%5B%5D=48&filter%5Bsort%5D=sortDateTimeDesc"],
+
+};
+
+const URL = "https://jlp.yahooapis.jp/NLUService/V1/analyze?appid="; // APIのリクエストURL
+const APPID = "dj00aiZpPTU5cWRTazM2NW1VTiZzPWNvbnN1bWVyc2VjcmV0Jng9OGY-"; // あなたのアプリケーションID
+
+const startButton = document.querySelector('#startButton'); // 開始ボタン
+const stopButton = document.querySelector('#stopButton'); // 停止ボタン
+const resultOutput = document.querySelector('#resultOutput'); // 結果出力エリア
+
+if (!'SpeechSynthesisUtterance' in window) {
+    alert("あなたのブラウザはSpeech Synthesis APIに未対応です。");
+}
+const tts = new SpeechSynthesisUtterance(); // TTSインスタンスを生成
+//tts.text = textForm.value; // テキストを設定
+tts.lang = "ja-JP"; // 言語(日本語)、英語の場合はen-US
+tts.rate = 1.0; // 速度
+tts.pitch = 1.0; // 声の高さ
+tts.volume = 1.0; // 音量
+
+SpeechRecognition = webkitSpeechRecognition || SpeechRecognition;
+if (!'SpeechRecognition' in window) {
+    alert("あなたのブラウザはSpeech Recognition APIに未対応です。");
+}
+
+const asr = new SpeechRecognition(); // ASRインスタンスを生成
+asr.lang = "ja-JP"; // 言語（日本語）
+asr.interimResults = true; // 途中結果出力をオン
+asr.continuous = true; // 継続入力をオン
+
+let output = ''; // 出力
+
+// 認識結果が出力されたときのイベントハンドラ
+asr.onresult = function(event){
+    let transcript = event.results[event.resultIndex][0].transcript; // 結果文字列
+
+    let output_not_final = '';
+    if (event.results[event.resultIndex].isFinal) { // 結果が確定（Final）のとき
+	    asr.abort(); // 音声認識を停止
+		
+		
+		let answer;
+        let webpage;
+		
+        let keys = Object.keys(response);
+        keys.forEach(function(key) {
+            let flag = true;
+            console.log(transcript);
+            key.split(',').forEach(function(word) {              
+                let pattern = new RegExp(word);
+                let flag_test = pattern.test(transcript); // マッチしたらtrue, しなかったらfalse
+                flag = flag && flag_test; // 両方trueならtrue
+                console.log(pattern + '+' + ':' + flag_test);
+                //flag = flag && new RegExp(word).test(transcript);
+            });
+
+            if(flag){
+		        ret = response[key];
+                console.log(key + " : " + ret);
+            }
+        });
+
+        if(typeof ret == 'undefined'){
+			answer = "少々お待ちください。";
+			
+			//再生が終了（end）ときのイベントハンドラ（終了したときに実行される）
+			tts.onend = function(event){
+				//asr.start(); // 音声認識を再開
+			}
+			
+				let queryURL = URL + APPID + "&intext=" + transcript;
+				console.log(queryURL);
+			
+				// HTTPリクエストの準備
+				const request = new XMLHttpRequest();
+				request.open('GET', queryURL, true);
+				request.responseType = 'json'; // レスポンスはJSON形式に変換
+			
+				// HTTPの状態が変化したときのイベントハンドラ
+				request.onreadystatechange = function() {
+					if (this.readyState == 4 && this.status == 200) {
+					// readyState == 4 操作完了
+					// status == 200 リクエスト成功（HTTPレスポンス）
+						
+						let res = this.response; // 結果はJSON形式
+
+						Object.keys(res.result).forEach(function (key) {
+							console.log(key + ": " + res.result[key])
+						});
+					
+						// method が SAY のときのみ
+						if(res.result.method == "SAY"){
+							var answer = res.result.param_text_tts || res.result.param_text;
+							tts.text = answer;
+						
+							// 再生が終了（end）ときのイベントハンドラ（終了したときに実行される）
+							tts.onend = function(event){
+								//asr.start(); // 音声認識を再開
+							}
+							output += answer + '<br>';
+							resultOutput.innerHTML = output;						
+							speechSynthesis.speak(tts); // 再生
+						
+						// method　が　WEATHER　のときのみ
+						}else if(res.result.method == "WEATHER"){
+							var answer = "大阪の天気予報サイトをご覧になってみてください。";
+							tts.text = answer;
+							
+							// 再生が終了（end）ときのイベントハンドラ（終了したときに実行される）
+							tts.onend = function(event){
+								window.open().location.href = "https://weather.yahoo.co.jp/weather/jp/27/"; // ページを移動
+								   
+								asr.start(); // 音声認識を再開 
+							}
+							
+							output += answer + '<br>';
+							resultOutput.innerHTML = output;						
+							speechSynthesis.speak(tts); // 再生					
+						
+						// method　が　FROMTO,TRANSIT　のときのみ
+						}else if(res.result.method == "TRANSIT"){
+							var answer = "電車、自動車、徒歩のどちらで行かれますか？";
+							tts.text = answer;
+							
+							// 再生が終了（end）ときのイベントハンドラ（終了したときに実行される）
+							tts.onend = function(event){
+								asr.start(); // 音声認識を再開 
+							}
+							
+							output += answer + '<br>';
+							resultOutput.innerHTML = output;						
+							speechSynthesis.speak(tts); // 再生
+
+						// intext　が　　エリア絞込みのときのみ
+						}else if(res.result.intext == "エリア絞込み"){
+							var answer = "こちらのエリアから選んでお答えください。";
+							tts.text = answer;
+							
+							// 再生が終了（end）ときのイベントハンドラ（終了したときに実行される）
+							tts.onend = function(event){
+								asr.start(); // 音声認識を再開 
+							}
+							
+							output += answer + '<br>' + "大阪北部（北摂）" + '<br>' +　"東部大阪（北河内・中河内）" + '<br>' +　"堺・泉北" + '<br>' +　"大阪南東部（南河内）" + '<br>' +　
+							"大阪南西部（泉州）" + '<br>' +　"新大阪・淀川区・十三" + '<br>' +　"キタ（梅田・福島・天満）" + '<br>' +　"ミナミ（心斎橋・難波）" + '<br>' +　"中之島・淀屋橋・本町" + '<br>' +　"天王寺・阿倍野・新世界" + '<br>' +　"ベイエリア" + '<br>' +　"上本町・鶴橋" + '<br>' +　"大阪城・鶴見緑地" + '<br>';
+							resultOutput.innerHTML = output;						
+							speechSynthesis.speak(tts); // 再生							
+						
+						// intext　が　重曹,13のときのみ
+						}else if(res.result.intext == "重曹"){
+							var answer = "地名の”じゅうそう”でしたね…　　新大阪・淀川区・十三エリアのスポットを表示します";
+							tts.text = answer;
+							
+							// 再生が終了（end）ときのイベントハンドラ（終了したときに実行される）
+							tts.onend = function(event){
+								window.open().location.href = "https://osaka-info.jp/search?filter%5Btop_search%5D=&filter%5Barea%5D%5B%5D=41&filter%5Bsort%5D=sortDateTimeDesc"; // ページを移動
+								   
+								asr.start(); // 音声認識を再開 
+							}
+							
+							output += answer + '<br>';
+							resultOutput.innerHTML = output;						
+							speechSynthesis.speak(tts); // 再生
+
+						// intext　が　重曹,13のときのみ
+						}else if(res.result.intext == "13"){
+							var answer = "地名の”じゅうそう”でしたね…　　新大阪・淀川区・十三エリアのスポットを表示します";
+							tts.text = answer;
+							
+							// 再生が終了（end）ときのイベントハンドラ（終了したときに実行される）
+							tts.onend = function(event){
+								window.open().location.href = "https://osaka-info.jp/search?filter%5Btop_search%5D=&filter%5Barea%5D%5B%5D=41&filter%5Bsort%5D=sortDateTimeDesc"; // ページを移動
+								   
+								asr.start(); // 音声認識を再開 
+							}
+							
+							output += answer + '<br>';
+							resultOutput.innerHTML = output;						
+							speechSynthesis.speak(tts); // 再生
+							
+						}else{
+							var answer = "ごめんなさい。分かりません。"
+							tts.text = answer;
+							
+							// 再生が終了（end）ときのイベントハンドラ（終了したときに実行される）
+							tts.onend = function(event){
+								//asr.start(); // 音声認識を再開
+							}
+							output += answer + '<br>';
+							resultOutput.innerHTML = output;						
+							speechSynthesis.speak(tts); // 再生
+						}
+					}
+				}
+			
+				// HTTPリクエストの実行
+				request.send();
+			
+						
+		}else{
+			answer = ret[0];
+			webpage = ret[1];
+    	}
+		
+		
+        output += transcript + ' => ' + answer + '<br>';
+
+	    tts.text = answer;
+	    // 再生が終了（end）ときのイベントハンドラ（終了したときに実行される）
+	    tts.onend = function(event){
+            if(typeof webpage != 'undefined'){
+                window.open().location.href = webpage; // ページを移動
+            }   
+            asr.start(); // 音声認識を再開 
+	    }
+
+	    speechSynthesis.speak(tts); // 再生
+    } else { // 結果がまだ未確定のとき
+        output_not_final = '<span style="color:#ddd;">' + transcript + '</span>';
+    }
+    resultOutput.innerHTML = output + output_not_final;
+}
+
+// 開始ボタンのイベントハンドラ
+startButton.addEventListener('click', function() {
+    asr.start();
+})
+
+// 停止ボタンのイベントハンドラ
+stopButton.addEventListener('click', function() {
+    asr.abort();
+    asr.stop();
+})
+</script>
+</div>
+
+
+<!-- Begin Yahoo! JAPAN Web Services Attribution Snippet -->
+<div class="API">
+  <a href="https://developer.yahoo.co.jp/about">
+  <img src="https://s.yimg.jp/images/yjdn/yjdn_attbtn2_105_17.gif" width="105" height="17" title="Webサービス by Yahoo! JAPAN" alt="Webサービス by Yahoo! JAPAN" border="0"></a>
+</div> 
+  <!-- End Yahoo! JAPAN Web Services Attribution Snippet -->
+
+<img src = "adDSC_1225.jpg" width="100%">
+</body>
+</html>    
